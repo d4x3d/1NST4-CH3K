@@ -1,0 +1,12 @@
+    [project]
+name = "1nst4-ch3k"
+version = "0.1.1"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.3.0",
+    "pydantic>=2.12.3",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+    "rich>=14.2.0",
+]
