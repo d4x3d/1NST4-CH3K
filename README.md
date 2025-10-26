@@ -277,11 +277,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Created by:** [d4x3d](https://github.com/d4x3d)
 **Tool Name:** 1NST4-CH3K
-**Powered by:** Python, Rich, Requests, and the open-source community
 
 ---
 
 <div align="center">
   <p><strong>⭐ If you find this tool useful, please give it a star! ⭐</strong></p>
-  <p>Made with ❤️ for the security research community</p>
 </div>
