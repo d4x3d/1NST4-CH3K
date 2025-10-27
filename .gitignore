@@ -53,3 +53,8 @@ Thumbs.db
 # Project specific
 proxies.txt
 config.yaml
+emails.txt
+valid_combos.txt
+test_emails.txt
+*.har
+5K FRANCE COMBOLIST.txt

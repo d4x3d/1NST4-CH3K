@@ -1,0 +1,56 @@
+# Proxy Configuration Instructions
+
+This file provides instructions on how to format proxies for use in the application.
+
+## Supported Proxy Formats
+
+The application supports the following proxy formats (one per line):
+
+1. **Simple HTTP Proxy:**
+   - Format: `host:port`
+   - Example: `192.168.1.1:8080`
+
+2. **HTTP Proxy with Authentication:**
+   - Format: `username:password@host:port`
+   - Example: `user:pass@192.168.1.1:8080`
+
+3. **Explicit HTTP Proxy:**
+   - Format: `http://host:port`
+   - Example: `http://192.168.1.1:8080`
+
+4. **HTTP Proxy with Authentication (Explicit):**
+   - Format: `http://username:password@host:port`
+   - Example: `http://user:pass@192.168.1.1:8080`
+
+5. **SOCKS5 Proxy:**
+   - Format: `socks5://host:port`
+   - Example: `socks5://192.168.1.1:1080`
+
+6. **SOCKS5 Proxy with Authentication:**
+   - Format: `socks5://username:password@host:port`
+   - Example: `socks5://user:pass@192.168.1.1:1080`
+
+7. **IPv6 Support:**
+   - Format: `socks5://user:pass@[2001:db8::1]:1080`
+   - Example: `socks5://user:pass@[2001:db8::1]:1080`
+
+## Notes
+
+- Lines starting with `#` are treated as comments and ignored.
+- Empty lines are ignored.
+- Replace `host`, `port`, `username`, and `password` with your actual proxy details.
+- Ensure the proxy is working and accessible before adding it.
+- The application will test proxies for health and only use working ones.
+
+## Example Proxy List
+
+# HTTP proxies
+192.168.1.1:8080
+user:pass@192.168.1.2:3128
+
+# SOCKS5 proxies
+socks5://10.0.0.1:1080
+socks5://proxyuser:proxypass@10.0.0.2:1080
+
+# IPv6
+socks5://[2001:db8::1]:1080

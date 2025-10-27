@@ -66,10 +66,10 @@ class ThreadedChecker:
 
         Args:
             max_workers: Maximum number of worker threads
-            requests_per_second: Rate limit for requests
+            requests_per_second: Initial rate limit for requests
         """
         self.max_workers = max_workers
-        self.rate_limiter = RateLimiter(requests_per_second)
+        self.rate_limiter = AdaptiveRateLimiter(initial_rps=requests_per_second, min_rps=0.1, max_rps=20.0)
         self.results: List[ThreadResult] = []
         self.lock = threading.Lock()
 
@@ -90,19 +90,23 @@ class ThreadedChecker:
         try:
             result = check_func(*args, **kwargs)
             execution_time = time.time() - start_time
-            return ThreadResult(
-                success=True,
-                data=result,
-                execution_time=execution_time
-            )
+            success = True
+            error_msg = None
         except Exception as e:
             execution_time = time.time() - start_time
-            return ThreadResult(
-                success=False,
-                data=None,
-                error=str(e),
-                execution_time=execution_time
-            )
+            success = False
+            result = None
+            error_msg = str(e)
+
+        # Record the request for adaptive rate limiting
+        self.rate_limiter.record_request(execution_time, success)
+
+        return ThreadResult(
+            success=success,
+            data=result,
+            error=error_msg,
+            execution_time=execution_time
+        )
 
     def check_batch_threaded(self, items: List[Any], check_func: Callable,
                            *args, **kwargs) -> List[ThreadResult]:
@@ -327,6 +331,12 @@ class AdaptiveRateLimiter:
     def acquire(self):
         """Acquire permission to make a request."""
         self.rate_limiter.acquire()
+
+    def update_rate(self, requests_per_second: float):
+        """Update the rate limit."""
+        with self.lock:
+            self.target_rps = requests_per_second
+            self.rate_limiter.update_rate(requests_per_second)
 
     def get_stats(self) -> Dict[str, Any]:
         """Get rate limiter statistics."""

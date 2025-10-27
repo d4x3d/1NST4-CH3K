@@ -32,6 +32,9 @@ class CheckerConfig:
     # Output settings
     output_file: Optional[str] = None
     output_format: str = "json"  # json, csv, txt
+    output_dir: str = "result"
+    output_json_file: str = "result/result.json"
+    output_txt_file: str = "result/results.txt"
 
     # Display settings
     show_colors: bool = True

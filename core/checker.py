@@ -12,6 +12,7 @@ import requests
 from typing import Dict, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum
+from bs4 import BeautifulSoup
 
 
 class CheckResult(Enum):
@@ -47,11 +48,11 @@ class InstagramChecker:
         self.proxy = proxy
         self.timeout = timeout
         self.user_agents = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:135.0) Gecko/20100101 Firefox/135.0",
         ]
 
         # Instagram API endpoint
@@ -62,16 +63,24 @@ class InstagramChecker:
 
     def _setup_session(self):
         """Set up the session with required headers."""
+        # Clear existing headers
+        self.session.headers.clear()
+
+        # Set up base headers
         self.session.headers.update({
             "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
             "Content-Type": "application/x-www-form-urlencoded",
             "X-Requested-With": "XMLHttpRequest",
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
-            "Priority": "u=0",
+            "Priority": "u=1",
             "Referer": "https://www.instagram.com/accounts/password/reset/",
+            "Origin": "https://www.instagram.com",
+            "DNT": "1",
+            "Connection": "keep-alive",
         })
 
         # Rotate user agent
@@ -81,21 +90,49 @@ class InstagramChecker:
 
     def _get_csrf_token(self) -> Optional[str]:
         """
-        Get CSRF token from Instagram (if needed).
+        Get CSRF token from Instagram by fetching the password reset page.
 
         Returns:
-            CSRF token or None if not needed
+            CSRF token extracted from cookies or headers
         """
         try:
+            # First, clear any existing cookies
+            self.session.cookies.clear()
+
+            # Fetch the password reset page to get a fresh CSRF token
             response = self.session.get(
                 "https://www.instagram.com/accounts/password/reset/",
                 proxies={"http": self.proxy, "https": self.proxy} if self.proxy else None,
                 timeout=self.timeout
             )
-            # For now, we'll use a static token as Instagram rotates these frequently
-            return "sTNLvqIRjilyVunk52oN_N"
-        except Exception:
-            return "sTNLvqIRjilyVunk52oN_N"  # Fallback token
+
+            # Try to extract CSRF token from cookies
+            csrf_token = response.cookies.get('csrftoken')
+
+            # If not found in cookies, try to extract from response headers or HTML
+            if not csrf_token:
+                # Look for csrftoken in response headers
+                csrf_token = response.headers.get('x-csrftoken')
+
+                # If still not found, try to extract from HTML content
+                if not csrf_token:
+                    import re
+                    # Look for CSRF token pattern in HTML
+                    token_pattern = r'csrf_token[\"\']?\s*[:=]\s*[\"\']([^\"\']+)[\"\']'
+                    matches = re.search(token_pattern, response.text)
+                    if matches:
+                        csrf_token = matches.group(1)
+
+            # If we still don't have a token, use a fallback
+            if not csrf_token:
+                csrf_token = "missing"  # Use "missing" to trigger Instagram's fallback
+
+            return csrf_token
+
+        except Exception as e:
+            # Log the error and use fallback
+            print(f"[!] Error fetching CSRF token: {e}")
+            return "missing"  # Use "missing" as fallback
 
     def check_account(self, email_or_username: str) -> CheckResponse:
         """
@@ -122,11 +159,11 @@ class InstagramChecker:
             # Update headers with CSRF token
             headers = {
                 "X-CSRFToken": csrf_token,
-                "X-Instagram-AJAX": "1028711338",
+                "X-Instagram-AJAX": "1",  # Simplified value
                 "X-IG-App-ID": "936619743392459",
-                "X-ASBD-ID": "359341",
+                "X-ASBD-ID": "129477",  # Updated ASBD ID
                 "X-IG-WWW-Claim": "0",
-                "X-Web-Session-ID": "ufn63m:rp12qc:3gp5uj"
+                "X-Requested-With": "XMLHttpRequest"
             }
 
             # Make the request
