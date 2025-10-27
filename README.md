@@ -5,12 +5,9 @@
   <p><strong>🔥 Instagram account validation tool with proxy support and multi-threading 🔥</strong></p>
 </div>
 
-<div align="center">
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Made by d4x3d](https://img.shields.io/badge/made%20by-d4x3d-red.svg)](https://github.com/d4x3d)
-</div>
-
 ## Features
 - Multi-threaded checking
 - Proxy rotation and health checking
